@@ -8,6 +8,7 @@ public class UploadApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(UploadApplication.class, args);
-	}
+		System.out.print("View at http://localhost:8080/\n");
+    }
 
 }
