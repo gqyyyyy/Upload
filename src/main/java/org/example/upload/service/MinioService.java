@@ -1,7 +1,10 @@
 package org.example.upload.service;
 
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -10,34 +13,29 @@ import java.io.InputStream;
 @Service
 public class MinioService {
 
-    // MinIO服务器配置
-    private final String MINIO_URL = "http://124.70.108.214:9000";
-    private final String ACCESS_KEY = "admin";
-    private final String SECRET_KEY = "JavaEE20251014";
+    private final MinioClient minioClient;
+
+    @Value("${minio.bucket}")
+    private String defaultBucket;
+
+    public MinioService(MinioClient minioClient) {
+        this.minioClient = minioClient;
+    }
 
     /**
-     * 上传文件到MinIO
-     * @param bucketName 存储桶名称
-     * @param fileName 文件名
-     * @param file 要上传的文件
-     * @throws Exception 可能抛出的异常
+     * 上传文件到MinIO（使用默认桶）
+     */
+    public void uploadFile(String fileName, MultipartFile file) throws Exception {
+        uploadFile(defaultBucket, fileName, file);
+    }
+
+    /**
+     * 上传文件到MinIO（指定桶）
      */
     public void uploadFile(String bucketName, String fileName, MultipartFile file) throws Exception {
-        // 创建MinIO客户端
-        MinioClient minioClient = MinioClient.builder()
-                .endpoint(MINIO_URL)
-                .credentials(ACCESS_KEY, SECRET_KEY)
-                .build();
+        ensureBucket(bucketName);
 
-        // 检查存储桶是否存在，如果不存在则创建
-        boolean isBucketExist = minioClient.bucketExists(io.minio.BucketExistsArgs.builder().bucket(bucketName).build());
-        if (!isBucketExist) {
-            minioClient.makeBucket(io.minio.MakeBucketArgs.builder().bucket(bucketName).build());
-        }
-
-        // 获取文件输入流
         try (InputStream inputStream = file.getInputStream()) {
-            // 上传文件
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
@@ -46,6 +44,13 @@ public class MinioService {
                             .contentType(file.getContentType())
                             .build()
             );
+        }
+    }
+
+    private void ensureBucket(String bucketName) throws Exception {
+        boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+        if (!exists) {
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
         }
     }
 }
