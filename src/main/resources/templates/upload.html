@@ -22,7 +22,9 @@
     <h2 class="mb-4 text-center">作业文件上传</h2>
 
     <!-- 显示上传结果消息 -->
-    <div th:if="${message != null}" class="alert alert-success text-center" role="alert">
+    <div th:if="${message != null}"
+         th:classappend="${messageType} == 'danger' ? 'alert alert-danger' : 'alert alert-success'"
+         class="alert text-center" role="alert">
         [[${message}]]
     </div>
 
@@ -30,7 +32,13 @@
         <div class="form-group">
             <label for="groupNumber">组号</label>
             <input type="text" class="form-control" id="groupNumber" name="groupNumber"
-                   required placeholder="请输入您的组号">
+                   required placeholder="请输入您的组号（作为上传文件名）">
+        </div>
+
+        <div class="form-group">
+            <label for="groupName">组名（可选）</label>
+            <input type="text" class="form-control" id="groupName" name="groupName"
+                   placeholder="例如：我有OOAD（仅用于显示，不影响文件命名）">
         </div>
 
         <div class="form-group">
